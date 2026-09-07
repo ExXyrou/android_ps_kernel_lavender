@@ -1,4 +1,4 @@
-name: 🛠️ PREDATOR STORMBREAKER KERNEL 4.4
+name: 🛠️ BUILD KERNEL 4.4 PREDATOR STORMBREAKER
 
 on:
   workflow_dispatch:
