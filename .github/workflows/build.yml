@@ -57,7 +57,7 @@ env:
   OUT_DIR: out
   ARCH: arm64
   SUBARCH: arm64
-  KERNEL_URL: https://github.com/ExXyrou/android_ps_kernel_lavender.git
+  KERNEL_URL: https://github.com/ExXyrou/android_ps_kernel_xiaomi_lavender.git
   KERNEL_BRANCH: oldcam
   DEFCONFIG: lavender-perf_defconfig
   ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
