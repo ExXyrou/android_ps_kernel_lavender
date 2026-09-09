@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       LOCALVERSION:
-        description: '🏷️ Custom Kernel Name (e.g., Lavender-Kernel)'
+        description: '🏷️ Custom Kernel Name (e.g., MyKernel-v1.0)'
         required: true
         type: string
       LOCALVERSION_AUTO:
