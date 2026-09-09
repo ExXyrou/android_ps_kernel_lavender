@@ -9,7 +9,7 @@ on:
         type: string
       LOCALVERSION:
         description: '🏷️ Custom Kernel Name (e.g., MyKernel-v1.0)'
-        required: false
+        required: true
         type: string
       LOCALVERSION_AUTO:
         description: '🔧 Enable Localversion Auto'
@@ -76,13 +76,7 @@ jobs:
         working-directory: ${{ env.KERNEL_DIR }}
         run: |
           CLEAN_INPUT=$(echo "${{ inputs.LOCALVERSION }}" | sed 's/^-//')
-          BASE_NAME="${CLEAN_INPUT:-}"
-          
-          if [ -n "$BASE_NAME" ]; then
-            FINAL_LOCAL="-${BASE_NAME}"
-          else
-            FINAL_LOCAL=""
-          fi
+          FINAL_LOCAL="-${CLEAN_INPUT}"
           
           echo "KERNEL_NAME_STRING=$FINAL_LOCAL" >> $GITHUB_ENV
           echo "Kernel string configured: $FINAL_LOCAL"
