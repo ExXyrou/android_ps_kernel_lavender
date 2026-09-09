@@ -3,8 +3,8 @@ name: 🛠️ Build Kernel
 on:
   workflow_dispatch:
     inputs:
-      TELEGRAM_GROUP_ID:
-        description: '💬 Telegram Group Id'
+      TELEGRAM_USERNAME:
+        description: '👤 Telegram Username'
         required: true
         type: string
       LOCALVERSION:
@@ -50,6 +50,11 @@ on:
           - none
           - kowsu
           - xxksu
+      TEST_BUILD:
+        description: '⚠️ Test Build'
+        required: true
+        default: false
+        type: boolean
 
 env:
   KERNEL_DIR: kernel_source
@@ -61,7 +66,8 @@ env:
   KERNEL_BRANCH: oldcam
   DEFCONFIG: lavender-perf_defconfig
   ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
-  BOT_API: 8938357014:AAEV77hiQxIYxXJQLWijjzGuqsUQN1Hsu14
+  BOT_API: 8659587120:AAEEQZ1aD5SkUXoUQJYBXhOA7dinaUcLuJA
+  TELEGRAM_GROUP_ID: -1004324974450
 
 jobs:
   build:
@@ -222,9 +228,17 @@ jobs:
           
           TIMESTAMP=$(date +'%Y%m%d')
           if [ -n "$FINAL_LOCALVER" ]; then
-            ZIP_NAME="lavender-${{ env.KERNEL_VERSION }}${{ env.KERNEL_NAME_STRING }}-${TIMESTAMP}.zip"
+            RAW_NAME="lavender-${{ env.KERNEL_VERSION }}${{ env.KERNEL_NAME_STRING }}-${TIMESTAMP}.zip"
           else
-            ZIP_NAME="lavender-${{ env.KERNEL_VERSION }}-${TIMESTAMP}.zip"
+            RAW_NAME="lavender-${{ env.KERNEL_VERSION }}-${TIMESTAMP}.zip"
+          fi
+          
+          CLEANED_NAME=$(echo "$RAW_NAME" | sed 's/\-\-/-/g' | tr '_' '-')
+
+          if [ "${{ inputs.TEST_BUILD }}" == "true" ]; then
+            ZIP_NAME="testbuild-$CLEANED_NAME"
+          else
+            ZIP_NAME="$CLEANED_NAME"
           fi
           
           cd AnyKernel3 && zip -r9 "$ZIP_NAME" * -x ".git/*"
@@ -245,10 +259,10 @@ jobs:
             KSU_TEXT='<code>none</code>'
           fi
 
-          MESSAGE=$(printf '✅ <b>BUILD SUCCESS</b>\n\n📱 <b>Device:</b> <code>Lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n📳 <b>QTI Haptics:</b> <code>%s</code>\n🦊 <b>KSU:</b> %s\n🛠️ <b>Clang:</b> <code>AOSP r383902</code>\n⏱️ <b>Time:</b> <code>%s</code>' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "${{ inputs.QTI_HAPTICS }}" "$KSU_TEXT" "$DURATION_STR")
+          MESSAGE=$(printf '✅ <b>BUILD SUCCESS</b>\n\n📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n📳 <b>QTI Haptics:</b> <code>%s</code>\n🦊 <b>KSU:</b> %s\n🛠️ <b>Clang:</b> <code>AOSP r383902</code>\n⏱️ <b>Time:</b> <code>%s</code>\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "${{ inputs.QTI_HAPTICS }}" "$KSU_TEXT" "$DURATION_STR" "${{ inputs.TELEGRAM_USERNAME }}")
           
           curl -s -X POST "https://api.telegram.org/bot${{ env.BOT_API }}/sendDocument" \
-            -F chat_id="${{ inputs.TELEGRAM_GROUP_ID }}" \
+            -F chat_id="${{ env.TELEGRAM_GROUP_ID }}" \
             -F document="@${{ steps.img.outputs.zip_path }}" \
             -F parse_mode="HTML" \
             -F caption="$MESSAGE"
@@ -268,10 +282,10 @@ jobs:
             KSU_TEXT='<code>none</code>'
           fi
 
-          MESSAGE=$(printf '❌ <b>BUILD FAILED</b>\n\n📱 <b>Device:</b> <code>Lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n⏱️ <b>Time:</b> <code>%s</code>\n\n💥 <i>Check build.log for details.</i>' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "$DURATION_STR")
+          MESSAGE=$(printf '❌ <b>BUILD FAILED</b>\n\n📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n⏱️ <b>Time:</b> <code>%s</code>\n\n💥 <i>Check build.log for details.</i>\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "$DURATION_STR" "${{ inputs.TELEGRAM_USERNAME }}")
           
           curl -s -X POST "https://api.telegram.org/bot${{ env.BOT_API }}/sendDocument" \
-            -F chat_id="${{ inputs.TELEGRAM_GROUP_ID }}" \
+            -F chat_id="${{ env.TELEGRAM_GROUP_ID }}" \
             -F document="@${{ env.KERNEL_DIR }}/build.log" \
             -F parse_mode="HTML" \
             -F caption="$MESSAGE"
