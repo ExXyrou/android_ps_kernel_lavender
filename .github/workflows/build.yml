@@ -122,22 +122,19 @@ jobs:
           KSU_URL="${KSU_TAG:+https://github.com/backslashxx/KernelSU/releases/tag/$KSU_TAG}"
           echo "KSU_LINK=${KSU_URL:-https://github.com/backslashxx/KernelSU/releases}" >> $GITHUB_ENV
 
-      - name: Setup Clang Toolchain Cache
+      - name: Restore AOSP Clang Cache
         id: clang-cache
         uses: actions/cache@v4
         with:
           path: ${{ env.CLANG_DIR }}
-          key: clang-r383902-kernel44-${{ hashFiles('.github/workflows/*.yml') }}
+          key: clang-aosp-${{ hashFiles('.github/workflows/*.yml') }}
 
-      - name: Download/Setup AOSP Clang r383902
+      - name: Download AOSP Clang
         if: steps.clang-cache.outputs.cache-hit != 'true'
         run: |
-          rm -rf "${{ env.CLANG_DIR }}"
-          mkdir -p "${{ env.CLANG_DIR }}"
-          echo "Downloading AOSP Clang r383902..."
-          wget -qO clang.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/tags/android-11.0.0_r3/clang-r383902.tar.gz" || \
-          wget -qO clang.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android11-qpr1-release/clang-r383902.tar.gz"
-          tar -xzf clang.tar.gz -C "${{ env.CLANG_DIR }}" && rm clang.tar.gz
+          mkdir -p "$CLANG_DIR" && cd "$CLANG_DIR"
+          curl -LSs "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/android11-release/clang-r383902.tar.gz" -o aosp_clang.archive
+          tar -xf aosp_clang.archive || unzip aosp_clang.archive && rm -f aosp_clang.archive
 
       - name: Fix Kernel 4.4 Compatibility & Prepare Configs
         working-directory: ${{ env.KERNEL_DIR }}
