@@ -16,21 +16,6 @@ on:
         required: true
         default: false
         type: boolean
-      DEFAULT_HOSTNAME:
-        description: '💻 Kernel Hostname (e.g., xiaomi@redmi)'
-        required: true
-        default: xiaomi@redmi
-        type: string
-      BUILD_USER:
-        description: '👤 Build Username (e.g., xiaomi)'
-        required: true
-        default: xiaomi
-        type: string
-      BUILD_HOST:
-        description: '🖥️ Build Hostname (e.g., redmi)'
-        required: true
-        default: redmi
-        type: string
       QTI_HAPTICS:
         description: '📳 Include QTI Haptics Support'
         required: true
@@ -50,11 +35,6 @@ on:
           - none
           - kowsu
           - xxksu
-      TEST_BUILD:
-        description: '⚠️ Test Build'
-        required: true
-        default: false
-        type: boolean
 
 env:
   KERNEL_DIR: kernel_source
@@ -65,9 +45,12 @@ env:
   KERNEL_URL: https://github.com/ExXyrou/android_ps_kernel_xiaomi_lavender.git
   KERNEL_BRANCH: oldcam
   DEFCONFIG: lavender-perf_defconfig
-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+  DEFAULT_HOSTNAME: xiaomi@redmi
+  BUILD_USER: xiaomi
+  BUILD_HOST: redmi
   BOT_API: 8659587120:AAEEQZ1aD5SkUXoUQJYBXhOA7dinaUcLuJA
   TELEGRAM_GROUP_ID: -1004324974450
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
 jobs:
   build:
@@ -172,7 +155,7 @@ jobs:
           disable_config() { ./scripts/config --file "$OUT_DIR/.config" --disable "$1"; }
           set_str() { ./scripts/config --file "$OUT_DIR/.config" --set-str "$1" "$2"; }
 
-          set_str CONFIG_DEFAULT_HOSTNAME "${{ inputs.DEFAULT_HOSTNAME }}"
+          set_str CONFIG_DEFAULT_HOSTNAME "${{ env.DEFAULT_HOSTNAME }}"
           set_str CONFIG_LOCALVERSION "${{ env.KERNEL_NAME_STRING }}"
 
           if [ "${{ inputs.LOCALVERSION_AUTO }}" == "true" ]; then
@@ -196,8 +179,8 @@ jobs:
         working-directory: ${{ env.KERNEL_DIR }}
         run: |
           export PATH="/usr/lib/ccache:$GITHUB_WORKSPACE/$CLANG_DIR/bin:$PATH"
-          export KBUILD_BUILD_USER="${{ inputs.BUILD_USER }}"
-          export KBUILD_BUILD_HOST="${{ inputs.BUILD_HOST }}"
+          export KBUILD_BUILD_USER="${{ env.BUILD_USER }}"
+          export KBUILD_BUILD_HOST="${{ env.BUILD_HOST }}"
           
           make -j$(nproc --all) O=$OUT_DIR ARCH=${{ env.ARCH }} \
             CC="ccache clang" \
@@ -226,29 +209,14 @@ jobs:
           FINAL_LOCALVER=$(echo "${{ env.KERNEL_NAME_STRING }}" | sed 's/^-//')
           sed -i -E 's/^(kernel\.string=).*/\1'"$FINAL_LOCALVER"'/' AnyKernel3/anykernel.sh
           
-          TIMESTAMP=$(date +'%Y%m%d')
-          if [ -n "$FINAL_LOCALVER" ]; then
-            RAW_NAME="lavender-${{ env.KERNEL_VERSION }}{{\ env.KERNEL_NAME_STRING }}-${TIMESTAMP}.zip"
-          else
-            RAW_NAME="lavender-${{ env.KERNEL_VERSION }}-${TIMESTAMP}.zip"
-          fi
-          
-          CLEANED_NAME=$(echo "$RAW_NAME" | sed 's/\-\-/-/g' | tr '_' '-')
+          ZIP_NAME="lavender-${{ env.KERNEL_VERSION }}${FINAL_LOCALVER:+-${FINAL_LOCALVER}}-$(date +'%Y%d%m').zip"
 
-          if [ "${{ inputs.TEST_BUILD }}" == "true" ]; then
-            ZIP_NAME="testbuild-$CLEANED_NAME"
-          else
-            ZIP_NAME="$CLEANED_NAME"
-          fi
-          
           cd AnyKernel3 && zip -r9 "$ZIP_NAME" * -x ".git/*"
           echo "zip_path=$GITHUB_WORKSPACE/AnyKernel3/$ZIP_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Send Telegram Notification (Success)
         if: success()
         run: |
-          DURATION=$(( $(date +%s) - ${{ env.BUILD_START_TIME }} ))
-          DURATION_STR="$((DURATION / 60))m $((DURATION % 60))s"
           CAM_TYPE=$([ "${{ inputs.BUILD_NEWCAM }}" == "true" ] && echo "newcam" || echo "oldcam")
 
           if [ "${{ inputs.INJECT_KSU }}" == "kowsu" ]; then
@@ -259,7 +227,7 @@ jobs:
             KSU_TEXT='<code>none</code>'
           fi
 
-          MESSAGE=$(printf '✅ <b>BUILD SUCCESS</b>\n\n📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n📳 <b>QTI Haptics:</b> <code>%s</code>\n🦊 <b>KSU:</b> %s\n⏱️ <b>Time:</b> <code>%s</code>\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "${{ inputs.QTI_HAPTICS }}" "$KSU_TEXT" "$DURATION_STR" "${{ inputs.TELEGRAM_USERNAME }}")
+          MESSAGE=$(printf '✅ <b>BUILD SUCCESS</b>\n\n📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n📳 <b>QTI Haptics:</b> <code>%s</code>\n🦊 <b>KSU:</b> %s\n🛠️ <b>Clang Compiler:</b> <code>AOSP r383902</code>\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "${{ inputs.QTI_HAPTICS }}" "$KSU_TEXT" "${{ inputs.TELEGRAM_USERNAME }}")
           
           curl -s -X POST "https://api.telegram.org/bot${{ env.BOT_API }}/sendDocument" \
             -F chat_id="${{ env.TELEGRAM_GROUP_ID }}" \
@@ -270,19 +238,9 @@ jobs:
       - name: Send Telegram Notification (Failure)
         if: failure()
         run: |
-          DURATION=$(( $(date +%s) - ${{ env.BUILD_START_TIME }} ))
-          DURATION_STR="$((DURATION / 60))m $((DURATION % 60))s"
           CAM_TYPE=$([ "${{ inputs.BUILD_NEWCAM }}" == "true" ] && echo "newcam" || echo "oldcam")
 
-          if [ "${{ inputs.INJECT_KSU }}" == "kowsu" ]; then
-            KSU_TEXT='<a href="https://t.me/kowsu_build">kowsu</a>'
-          elif [ "${{ inputs.INJECT_KSU }}" == "xxksu" ]; then
-            KSU_TEXT='<a href="${{ env.KSU_LINK }}">xxksu</a>'
-          else
-            KSU_TEXT='<code>none</code>'
-          fi
-
-          MESSAGE=$(printf '❌ <b>BUILD FAILED</b>\n\n📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n⏱️ <b>Time:</b> <code>%s</code>\n\n💥 <i>Check build.log for details.</i>\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "$DURATION_STR" "${{ inputs.TELEGRAM_USERNAME }}")
+          MESSAGE=$(printf '❌ <b>BUILD FAILED</b>\n\n📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n\n💥 <i>Check build.log for details.</i>\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "${{ inputs.TELEGRAM_USERNAME }}")
           
           curl -s -X POST "https://api.telegram.org/bot${{ env.BOT_API }}/sendDocument" \
             -F chat_id="${{ env.TELEGRAM_GROUP_ID }}" \
