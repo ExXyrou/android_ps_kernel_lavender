@@ -127,13 +127,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.CLANG_DIR }}
-          key: clang-aosp-${{ hashFiles('.github/workflows/*.yml') }}
+          key: clang-aosp-tc-${{ hashFiles('.github/workflows/*.yml') }}
 
-      - name: Download/Clone AOSP Clang
+      - name: Download/Setup AOSP Clang
         if: steps.clang-cache.outputs.cache-hit != 'true'
         run: |
           rm -rf "${{ env.CLANG_DIR }}"
-          git clone --depth=1 https://github.com/kdrag0n/aosp-clang.git "${{ env.CLANG_DIR }}"
+          mkdir -p "${{ env.CLANG_DIR }}"
+          echo "Downloading AOSP Clang..."
+          git clone --depth=1 https://github.com/XiaMu-0/aosp-clang.git "${{ env.CLANG_DIR }}" || \
+          (wget -qO clang.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r416183b.tar.gz" && tar -xzf clang.tar.gz -C "${{ env.CLANG_DIR }}" && rm clang.tar.gz)
 
       - name: Fix Resource Errors & Prepare Configs
         working-directory: ${{ env.KERNEL_DIR }}
@@ -220,7 +223,7 @@ jobs:
             KSU_TEXT='<code>none</code>'
           fi
 
-          MESSAGE=$(printf '✅ <b>BUILD SUCCESS</b>\n\n📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n📳 <b>QTI Haptics:</b> <code>%s</code>\n🦊 <b>KSU:</b> %s\n🛠️ <b>Clang Compiler:</b> <code>AOSP Clang r383902</code>\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "${{ inputs.QTI_HAPTICS }}" "$KSU_TEXT" "${{ inputs.TELEGRAM_USERNAME }}")
+          MESSAGE=$(printf '✅ <b>BUILD SUCCESS</b>\n\n📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n📳 <b>QTI Haptics:</b> <code>%s</code>\n🦊 <b>KSU:</b> %s\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "${{ inputs.QTI_HAPTICS }}" "$KSU_TEXT" "${{ inputs.TELEGRAM_USERNAME }}")
           
           curl -s -X POST "https://api.telegram.org/bot${{ env.BOT_API }}/sendDocument" \
             -F chat_id="${{ env.TELEGRAM_GROUP_ID }}" \
