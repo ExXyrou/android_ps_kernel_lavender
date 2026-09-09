@@ -127,16 +127,19 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.CLANG_DIR }}
-          key: clang-aosp-tc-${{ hashFiles('.github/workflows/*.yml') }}
+          key: clang-r383902-${{ hashFiles('.github/workflows/*.yml') }}
 
-      - name: Download/Setup AOSP Clang
+      - name: Download/Setup AOSP Clang r383902
         if: steps.clang-cache.outputs.cache-hit != 'true'
         run: |
           rm -rf "${{ env.CLANG_DIR }}"
           mkdir -p "${{ env.CLANG_DIR }}"
-          echo "Downloading AOSP Clang..."
-          git clone --depth=1 https://github.com/XiaMu-0/aosp-clang.git "${{ env.CLANG_DIR }}" || \
-          (wget -qO clang.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r416183b.tar.gz" && tar -xzf clang.tar.gz -C "${{ env.CLANG_DIR }}" && rm clang.tar.gz)
+          echo "Downloading AOSP Clang r383902..."
+          # Menggunakan sumber arsip resmi AOSP untuk Clang r383902
+          wget -qO clang.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/tags/android-11.0.0_r3/clang-r383902.tar.gz" || \
+          wget -qO clang.tar.gz "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android11-qpr1-release/clang-r383902.tar.gz" || \
+          wget -qO clang.tar.gz "https://github.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-6443078/archive/refs/heads/11.0.1.tar.gz"
+          tar -xzf clang.tar.gz -C "${{ env.CLANG_DIR }}" && rm clang.tar.gz
 
       - name: Fix Resource Errors & Prepare Configs
         working-directory: ${{ env.KERNEL_DIR }}
@@ -175,6 +178,7 @@ jobs:
         working-directory: ${{ env.KERNEL_DIR }}
         run: |
           export PATH="/usr/lib/ccache:$GITHUB_WORKSPACE/$CLANG_DIR/bin:$PATH"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/$CLANG_DIR/lib64:$LD_LIBRARY_PATH"
           export KBUILD_BUILD_USER="${{ env.BUILD_USER }}"
           export KBUILD_BUILD_HOST="${{ env.BUILD_HOST }}"
           
@@ -185,7 +189,7 @@ jobs:
             CLANG_TRIPLE=aarch64-linux-gnu- \
             CROSS_COMPILE=aarch64-linux-gnu- \
             CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-            KCFLAGS="-Wno-address -Wno-implicit-function-declaration" Image.gz-dtb 2>&1 | tee build.log
+            KCFLAGS="-Wno-address -Wno-implicit-function-declaration -Wno-misleading-indentation" Image.gz-dtb 2>&1 | tee build.log
 
           if [ ! -f "$OUT_DIR/arch/arm64/boot/Image.gz-dtb" ]; then
             echo "Error: Kernel file (Image.gz-dtb) not found!"
@@ -217,28 +221,28 @@ jobs:
 
           if [ "${{ inputs.INJECT_KSU }}" == "kowsu" ]; then
             KSU_TEXT='<a href="https://t.me/kowsu_build">kowsu</a>'
-          elif [ "${{ inputs.INJECT_KSU }}" == "xxksu" ]; then
+         elif [ "${{ inputs.INJECT_KSU }}" == "xxksu" ]; then
             KSU_TEXT='<a href="${{ env.KSU_LINK }}">xxksu</a>'
-          else
+         else
             KSU_TEXT='<code>none</code>'
-          fi
+         fi
 
-          MESSAGE=$(printf '✅ <b>BUILD SUCCESS</b>\n\n📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n📳 <b>QTI Haptics:</b> <code>%s</code>\n🦊 <b>KSU:</b> %s\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "${{ inputs.QTI_HAPTICS }}" "$KSU_TEXT" "${{ inputs.TELEGRAM_USERNAME }}")
+         MESSAGE=$(printf '✅ <b>BUILD SUCCESS</b>\n\n📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n📳 <b>QTI Haptics:</b> <code>%s</code>\n🦊 <b>KSU:</b> %s\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "${{ inputs.QTI_HAPTICS }}" "$KSU_TEXT" "${{ inputs.TELEGRAM_USERNAME }}")
           
-          curl -s -X POST "https://api.telegram.org/bot${{ env.BOT_API }}/sendDocument" \
+         curl -s -X POST "https://api.telegram.org/bot${{ env.BOT_API }}/sendDocument" \
             -F chat_id="${{ env.TELEGRAM_GROUP_ID }}" \
             -F document="@${{ steps.img.outputs.zip_path }}" \
             -F parse_mode="HTML" \
             -F caption="$MESSAGE"
 
-      - name: Send Telegram Notification (Failure)
+      - name: Send Telegram Library (Failure)
         if: failure()
         run: |
-          CAM_TYPE=$([ "${{ inputs.BUILD_NEWCAM }}" == "true" ] && echo "newcam" || echo "oldcam")
+         CAM_TYPE=$([ "${{ inputs.BUILD_NEWCAM }}" == "true" ] && echo "newcam" || echo "oldcam")
 
-          MESSAGE=$(printf '❌ <b>BUILD FAILED</b>\n\n📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n\n💥 <i>Check build.log for details.</i>\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "${{ inputs.TELEGRAM_USERNAME }}")
+         MESSAGE=$(printf '❌ <b>BUILD FAILED</b>\n\n📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n\n💥 <i>Check build.log for details.</i>\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "${{ inputs.TELEGRAM_USERNAME }}")
           
-          curl -s -X POST "https://api.telegram.org/bot${{ env.BOT_API }}/sendDocument" \
+         curl -s -X POST "https://api.telegram.org/bot${{ env.BOT_API }}/sendDocument" \
             -F chat_id="${{ env.TELEGRAM_GROUP_ID }}" \
             -F document="@${{ env.KERNEL_DIR }}/build.log" \
             -F parse_mode="HTML" \
