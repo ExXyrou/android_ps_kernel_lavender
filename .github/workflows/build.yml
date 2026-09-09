@@ -135,12 +135,11 @@ jobs:
           path: ${{ env.CLANG_DIR }}
           key: clang-aosp-${{ hashFiles('.github/workflows/*.yml') }}
 
-      - name: Download AOSP Clang
+      - name: Download/Clone AOSP Clang
         if: steps.clang-cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p "$CLANG_DIR" && cd "$CLANG_DIR"
-          curl -LSs "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/android11-release/clang-r383902.tar.gz" -o aosp_clang.archive
-          tar -xf aosp_clang.archive || unzip aosp_clang.archive && rm -f aosp_clang.archive
+          rm -rf "${{ env.CLANG_DIR }}"
+          git clone --depth=1 https://github.com/kdrag0n/aosp-clang.git "${{ env.CLANG_DIR }}"
 
       - name: Fix Resource Errors & Prepare Configs
         working-directory: ${{ env.KERNEL_DIR }}
@@ -209,7 +208,7 @@ jobs:
           FINAL_LOCALVER=$(echo "${{ env.KERNEL_NAME_STRING }}" | sed 's/^-//')
           sed -i -E 's/^(kernel\.string=).*/\1'"$FINAL_LOCALVER"'/' AnyKernel3/anykernel.sh
           
-          ZIP_NAME="lavender-${{ env.KERNEL_VERSION }}${FINAL_LOCALVER:+-${FINAL_LOCALVER}}-$(date +'%Y%d%m').zip"
+          ZIP_NAME="lavender-${{ env.KERNEL_VERSION }}-${{ env.KERNEL_NAME_STRING }}-$(date +'%Y%d%m').zip"
 
           cd AnyKernel3 && zip -r9 "$ZIP_NAME" * -x ".git/*"
           echo "zip_path=$GITHUB_WORKSPACE/AnyKernel3/$ZIP_NAME" >> "$GITHUB_OUTPUT"
