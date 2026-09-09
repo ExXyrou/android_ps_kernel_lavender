@@ -223,7 +223,7 @@ jobs:
             KSU_TEXT='<code>none</code>'
           fi
 
-          MESSAGE=$(printf '✅ <b>BUILD SUCCESS (Kernel 4.4)</b>\n\n📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n📳 <b>QTI Haptics:</b> <code>%s</code>\n🦊 <b>KSU:</b> %s\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "${{ inputs.QTI_HAPTICS }}" "$KSU_TEXT" "${{ inputs.TELEGRAM_USERNAME }}")
+          MESSAGE=$(printf '✅ <b>BUILD SUCCESS</b>\n\n📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n📳 <b>QTI Haptics:</b> <code>%s</code>\n🦊 <b>KSU:</b> %s\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "${{ inputs.QTI_HAPTICS }}" "$KSU_TEXT" "${{ inputs.TELEGRAM_USERNAME }}")
           
           curl -s -X POST "https://api.telegram.org/bot${{ env.BOT_API }}/sendDocument" \
             -F chat_id="${{ env.TELEGRAM_GROUP_ID }}" \
@@ -236,7 +236,7 @@ jobs:
         run: |
           CAM_TYPE=$([ "${{ inputs.BUILD_NEWCAM }}" == "true" ] && echo "newcam" || echo "oldcam")
 
-          MESSAGE=$(printf '❌ <b>BUILD FAILED (Kernel 4.4)</b>\n\n📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n\n💥 <i>Check build.log for details.</i>\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "${{ inputs.TELEGRAM_USERNAME }}")
+          MESSAGE=$(printf '❌ <b>BUILD FAILED</b>\n\n📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n\n💥 <i>Check build.log for details.</i>\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "${{ inputs.TELEGRAM_USERNAME }}")
           
           curl -s -X POST "https://api.telegram.org/bot${{ env.BOT_API }}/sendDocument" \
             -F chat_id="${{ env.TELEGRAM_GROUP_ID }}" \
