@@ -205,7 +205,7 @@ jobs:
           FINAL_LOCALVER=$(echo "${{ env.KERNEL_NAME_STRING }}" | sed 's/^-//')
           sed -i -E 's/^(kernel\.string=).*/\1'"$FINAL_LOCALVER"'/' AnyKernel3/anykernel.sh
           
-          ZIP_NAME="lavender-${{ env.KERNEL_VERSION }}-${{ env.KERNEL_NAME_STRING }}-$(date +'%Y%d%m').zip"
+          ZIP_NAME="lavender-${{ env.KERNEL_VERSION }}${{ env.KERNEL_NAME_STRING }}-$(date +'%Y%d%m').zip"
 
           cd AnyKernel3 && zip -r9 "$ZIP_NAME" * -x ".git/*"
           echo "zip_path=$GITHUB_WORKSPACE/AnyKernel3/$ZIP_NAME" >> "$GITHUB_OUTPUT"
