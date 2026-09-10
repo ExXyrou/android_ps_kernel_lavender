@@ -142,14 +142,6 @@ jobs:
           [ -f scripts/dtc/dtc-parser.tab.c ] && sed -i 's/^YYLTYPE yylloc;/extern YYLTYPE yylloc;/' scripts/dtc/dtc-parser.tab.c
           [ -f scripts/dtc/dtc-lexer.lex.c_shipped ] && sed -i 's/^YYLTYPE yylloc;/extern YYLTYPE yylloc;/' scripts/dtc/dtc-lexer.lex.c_shipped
           [ -f scripts/dtc/dtc-parser.tab.h ] && sed -i 's/^YYLTYPE yylloc;/extern YYLTYPE yylloc;/' scripts/dtc/dtc-parser.tab.h || true
-          
-          if [ -f "drivers/md/raid10.c" ]; then
-            sed -i 's/struct r10dev devs\[conf->copies\];/struct r10dev *devs;/' drivers/md/raid10.c || true
-          fi
-          
-          if [ -f "net/netfilter/nf_conntrack_sip.c" ]; then
-            sed -i 's/if (nf_ct_disable_sip_alg)/if (0)/g' net/netfilter/nf_conntrack_sip.c || true
-          fi
 
           export PATH="$GITHUB_WORKSPACE/$CLANG_DIR/bin:$PATH"
           make O=$OUT_DIR ARCH=${{ env.ARCH }} CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- ${{ env.DEFCONFIG }}
