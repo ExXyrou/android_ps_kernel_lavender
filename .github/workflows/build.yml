@@ -60,7 +60,7 @@ jobs:
 
     steps:
       - name: Checkout Repository & Start Timer
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 1
 
@@ -100,7 +100,7 @@ jobs:
             bc bison flex libssl-dev libelf-dev build-essential python3 python3-pip curl git zip unzip wget ccache libncurses-dev rsync gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu gcc-arm-linux-gnueabi binutils-arm-linux-gnueabi
 
       - name: Setup Compiler Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.ccache
           key: ccache-kernel44-${{ env.DEFCONFIG }}-${{ github.run_id }}
@@ -124,7 +124,7 @@ jobs:
 
       - name: Restore AOSP Clang Cache
         id: clang-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ env.CLANG_DIR }}
           key: clang-aosp-${{ hashFiles('.github/workflows/*.yml') }}
