@@ -133,8 +133,22 @@ jobs:
         if: steps.clang-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p "$CLANG_DIR" && cd "$CLANG_DIR"
-          curl -LSs "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/android11-release/clang-r383902.tar.gz" -o aosp_clang.archive
-          tar -xf aosp_clang.archive || unzip aosp_clang.archive && rm -f aosp_clang.archive
+          echo "Downloading AOSP Clang..."
+          curl -L --retry 5 --retry-delay 5 \
+            "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/android11-release/clang-r383902.tar.gz" \
+            -o aosp_clang.archive
+
+          FILE_SIZE=$(stat -c%s "aosp_clang.archive" 2>/dev/null || stat -f%z "aosp_clang.archive" 2>/dev/null || echo 0)
+          echo "Downloaded file size: $FILE_SIZE bytes"
+          
+          if [ "$FILE_SIZE" -lt 50000000 ]; then
+            echo "Error: Downloaded file is too small. Server may have blocked the request or returned an error page."
+            rm -f aosp_clang.archive
+            exit 1
+          fi
+
+          tar -xf aosp_clang.archive || unzip aosp_clang.archive || { echo "Extraction failed"; exit 1; }
+          rm -f aosp_clang.archive
 
       - name: Fix Kernel Compatibility & Prepare Configs
         working-directory: ${{ env.KERNEL_DIR }}
