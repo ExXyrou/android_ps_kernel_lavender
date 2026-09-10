@@ -44,7 +44,7 @@ env:
   SUBARCH: arm64
   KERNEL_URL: https://github.com/ExXyrou/android_ps_kernel_xiaomi_lavender.git
   KERNEL_BRANCH: oldcam
-  DEFCONFIG: lavender_defconfig
+  DEFCONFIG: lavender-perf_defconfig
   DEFAULT_HOSTNAME: xiaomi@redmi
   BUILD_USER: xiaomi
   BUILD_HOST: redmi
