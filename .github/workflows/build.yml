@@ -136,7 +136,7 @@ jobs:
           curl -LSs "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/android11-release/clang-r383902.tar.gz" -o aosp_clang.archive
           tar -xf aosp_clang.archive || unzip aosp_clang.archive && rm -f aosp_clang.archive
 
-      - name: Fix Kernel 4.4 Compatibility & Prepare Configs
+      - name: Fix Kernel Compatibility & Prepare Configs
         working-directory: ${{ env.KERNEL_DIR }}
         run: |
           [ -f scripts/dtc/dtc-parser.tab.c ] && sed -i 's/^YYLTYPE yylloc;/extern YYLTYPE yylloc;/' scripts/dtc/dtc-parser.tab.c
@@ -170,7 +170,7 @@ jobs:
 
           make O=$OUT_DIR ARCH=${{ env.ARCH }} CC=clang olddefconfig
 
-      - name: Build Kernel 4.4
+      - name: Build Kernel
         working-directory: ${{ env.KERNEL_DIR }}
         run: |
           export PATH="/usr/lib/ccache:$GITHUB_WORKSPACE/$CLANG_DIR/bin:$PATH"
