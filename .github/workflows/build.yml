@@ -204,6 +204,8 @@ jobs:
           
           FINAL_LOCALVER=$(echo "${{ env.KERNEL_NAME_STRING }}" | sed 's/^-//')
           sed -i -E 's/^(kernel\.string=).*/\1'"$FINAL_LOCALVER"'/' AnyKernel3/anykernel.sh
+
+          sed -i "s/^device\.name1=.*/device.name1=lavender/" anykernel.sh
           
           ZIP_NAME="lavender-${{ env.KERNEL_VERSION }}${{ env.KERNEL_NAME_STRING }}-$(date +'%Y%d%m').zip"
 
