@@ -185,7 +185,7 @@ jobs:
             CLANG_TRIPLE=aarch64-linux-gnu- \
             CROSS_COMPILE=aarch64-linux-gnu- \
             CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-            KCFLAGS="$MAKE_KCFLAGS" Image.gz-dtb 2>&1 | tee build.log
+            Image.gz-dtb 2>&1 | tee build.log
 
           if [ ! -f "$OUT_DIR/arch/arm64/boot/Image.gz-dtb" ]; then
             echo "Error: Kernel file (Image.gz-dtb) not found!"
@@ -205,7 +205,7 @@ jobs:
           FINAL_LOCALVER=$(echo "${{ env.KERNEL_NAME_STRING }}" | sed 's/^-//')
           sed -i -E 's/^(kernel\.string=).*/\1'"$FINAL_LOCALVER"'/' AnyKernel3/anykernel.sh
 
-          sed -i "s/^device\.name1=.*/device.name1=lavender/" anykernel.sh
+          sed -i "s/^device\.name1=.*/device.name1=lavender/" AnyKernel3/anykernel.sh
           
           ZIP_NAME="lavender-${{ env.KERNEL_VERSION }}${{ env.KERNEL_NAME_STRING }}-$(date +'%Y%d%m').zip"
 
@@ -236,8 +236,6 @@ jobs:
       - name: Send Telegram Notification (Failure)
         if: failure()
         run: |
-          CAM_TYPE=$([ "${{ inputs.BUILD_NEWCAM }}" == "true" ] && echo "newcam" || echo "oldcam")
-
           MESSAGE=$(printf '❌ <b>BUILD FAILED</b>\n\n💥 <i>Check build.log for details.</i>\n\n<b>By:</b> %s' "${{ inputs.TELEGRAM_USERNAME }}")
           
           curl -s -X POST "https://api.telegram.org/bot${{ env.BOT_API }}/sendDocument" \
