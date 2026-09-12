@@ -16,11 +16,6 @@ on:
         required: true
         default: false
         type: boolean
-      QTI_HAPTICS:
-        description: '📳 Include QTI Haptics Support'
-        required: true
-        default: false
-        type: boolean
       BUILD_NEWCAM:
         description: '📷 Use Newcam Build'
         required: true
@@ -174,7 +169,6 @@ jobs:
             disable_config CONFIG_LOCALVERSION_AUTO
           fi
 
-          [ "${{ inputs.QTI_HAPTICS }}" == "true" ] && enable_config CONFIG_INPUT_QTI_HAPTICS
           [ "${{ inputs.BUILD_NEWCAM }}" == "true" ] && enable_config CONFIG_XIAOMI_NEW_CAMERA_BLOBS
 
           if [ "${{ inputs.INJECT_KSU }}" != "none" ]; then
@@ -239,11 +233,11 @@ jobs:
             KSU_TEXT='<code>none</code>'
           fi
 
-          MESSAGE=$(printf '📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n📷 <b>Build Type:</b> <code>%s</code>\n📳 <b>QTI Haptics:</b> <code>%s</code>\n🦊 <b>KSU:</b> %s\n🛠️ <b>Clang Compiler:</b> <code>AOSP Clang r383902</code>\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "${{ inputs.QTI_HAPTICS }}" "$KSU_TEXT" "${{ inputs.TELEGRAM_USERNAME }}")
+          MESSAGE=$(printf '📱 <b>Device:</b> <code>lavender</code>\n🏷️ <b>Kernel Name:</b> <code>%s%s</code>\n⚙️ <b>Kernel Type:</b> <code>HMP</code>\n📷 <b>Build Type:</b> <code>%s</code>\n🦊 <b>KSU:</b> %s\n🛠️ <b>Clang Compiler:</b> <code>AOSP Clang r383902</code>\n\n<b>By:</b> %s' "${{ env.KERNEL_VERSION }}" "${{ env.KERNEL_NAME_STRING }}" "$CAM_TYPE" "$KSU_TEXT" "${{ inputs.TELEGRAM_USERNAME }}")
           
           curl -s -X POST "https://api.telegram.org/bot${{ env.BOT_API }}/sendDocument" \
             -F chat_id="${{ env.TELEGRAM_GROUP_ID }}" \
-            -F message_thread_id="336" \
+            -F message_thread_id="471" \
             -F document="@${{ steps.img.outputs.zip_path }}" \
             -F parse_mode="HTML" \
             -F caption="$MESSAGE"
